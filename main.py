@@ -1,4 +1,4 @@
-import re      # USE CHROME VERSION 135.0.7049.84
+import re    # USE CHROME VERSION 135.0.7049.84
 import os
 import selenium 
 import time 
@@ -8,19 +8,18 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as EC 
 
 WEBHOOK = "YOUR_WEBHOOK_URL" # Replace with your actual webhook URL (DISCORD WEBHOOK)
-    def send_discord_notif(message):  # Function to send a Discord notification via webhook 
-        def send_discord_notification(message):
+def send_discord_notif(message):  # Function to send a Discord notification via webhook
     data = {
-        "content": message  # Creates a dictionary with the content and message values 
+        "content": message  # Creates a dictionary with the content and message values
     }
-    try:  # Error handling. Any errors occur goes to the except block 
+    try:  # Error handling. Any errors occur goes to the except block
         response = requests.post(WEBHOOK, json=data)
-        response.raise_for_status() # Checks if the request was successful
-    except requests.exceptions.RequestException as e: 
-        print(f"Failed to send Discord notification: {e}") # Prints the error message in the console incase something goes wrong 
+        response.raise_for_status()  # Checks if the request was successful
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to send Discord notification: {e}")  # Prints the error message in the console incase something goes wrong
 
 driver = webdriver.Chrome(executable_path="./chromedriver-linux64") # checks whether chromedriver for selenium is in the same file as the rest of the code. 
 
@@ -125,5 +124,6 @@ def fill_easy_form():
         print(f"Skipped optional fields or form already filled: {e}") # Notifies the user if any optional fields or form were skipped or already filled
 
     time.sleep(5) # Stops running the program for 5 seconds then resumes
+
 
 
