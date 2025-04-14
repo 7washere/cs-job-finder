@@ -1,20 +1,20 @@
-Name: [Your Full Name]  
-Email: [Your Email Address]  
-Phone: [Your Phone Number]  
+Name: Swayamsidh Samal 
+Email: rallymonster123@gmail.com
+Phone: 8249977320
 
 Objective:  
-[Short objective/goal for internship]  
+Looking for an internship
 
 Skills:  
-- Skill 1  
-- Skill 2  
-- Skill 3  
+- c++  
+- java  
+- python
 ...  
 
 Projects:  
-- Project Name – Description  
-- Project Name – Description  
+- Ai weather analysis 
+- CarHelp to help someone buy and maintain their first car.  
 
 Education:  
-[Your current education status and expected graduation year]  
+Computer Science (Bachelors) Expected Graduate 2026 
 
