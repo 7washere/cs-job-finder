@@ -20,7 +20,7 @@ driver = webdriver.Chrome(service=service)
 username = "p12ht390-937@proton.me" # Replace with your LinkedIn username
 password = "meowmeow1212!!!!!" # Replace with your LinkedIn password
 
-openai_api = "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" # Replace with your actual OpenAI API key
+openai_api = "" # Replace with your actual OpenAI API key
 WEBHOOK = "https://discord.com/api/webhooks/1361243296839630928/sXyBE3_wt909lTihs6nBwdxrBYGzIvMl5TLZjxG4OuUGr8pe1lgNIRgdPpYWV8l4C9HA" # Replace with your actual webhook URL (DISCORD WEBHOOK)
 file_path = "resume.txt"
 def send_discord_notif(message):  # Function to send a Discord notification via webhook
