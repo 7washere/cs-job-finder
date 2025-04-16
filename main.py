@@ -13,6 +13,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC 
 import openai 
+from selenium.webdriver.chrome.options import Options
+
+chrome_options = Options() # Assigns the options package to chrome_options for giving us our own settings for chrome 
+chrome_options.add_experimental_option("detach", True) #Prevent chrome from closing after running ONLY FOR DEBUGGING 
 
 
 service = Service(ChromeDriverManager().install()) # Chromedriver manager manages chrome
@@ -89,7 +93,7 @@ def login_to_linkedin(driver, username, password):
 
         driver.get("https://www.linkedin.com/login")  # Navigates the browser to the LinkedIn login page.
 
-        print("Current URL (after get):", driver.current_url)  # Prints the current URL after navigating to the login page.
+        print(driver.current_url) # Prints the current URL after navigating to the login page.
 
         email_element = WebDriverWait(driver, 20).until(  # Waits up to 20 seconds for the email input field to be present.
             EC.presence_of_element_located((By.ID, "username"))  # Locates the email input field by its ID.
@@ -215,3 +219,5 @@ def resume_feedback(file_path):  # function to get resume feedback
             print("❌ Error getting feedback:", e) # Prints error in terminal 
             send_discord_notif(f"❌ Failed to get resume feedback: {e}") # Sends error to Discord
 
+
+input()
