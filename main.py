@@ -14,6 +14,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC 
 import openai 
 from selenium.webdriver.chrome.options import Options
+import config 
+
+username = config.username
+password = config.password
+openai_api = config.openai_api
+WEBHOOK = config.WEBHOOK
+file_path = config.file_path
+number = config.number 
+
 
 chrome_options = Options() # Assigns the options package to chrome_options for giving us our own settings for chrome 
 chrome_options.add_experimental_option("detach", True) #Prevent chrome from closing after running ONLY FOR DEBUGGING 
@@ -22,12 +31,6 @@ chrome_options.add_experimental_option("detach", True) #Prevent chrome from clos
 service = Service(ChromeDriverManager().install()) # Chromedriver manager manages chrome
 driver = webdriver.Chrome(service=service)
 
-username = "p12ht390-937@proton.me" # Replace with your LinkedIn username
-password = "meowmeow1212!!!!!" # Replace with your LinkedIn password
-
-openai_api = "" # Replace with your actual OpenAI API key
-WEBHOOK = "https://discord.com/api/webhooks/1361243296839630928/sXyBE3_wt909lTihs6nBwdxrBYGzIvMl5TLZjxG4OuUGr8pe1lgNIRgdPpYWV8l4C9HA" # Replace with your actual webhook URL (DISCORD WEBHOOK)
-file_path = "resume.txt"
 
 def send_discord_notif(message):  # Function to send a Discord notification via webhook
     data = {
@@ -39,8 +42,7 @@ def send_discord_notif(message):  # Function to send a Discord notification via 
     except requests.exceptions.RequestException as e:
         print(f"Failed to send Discord notification: {e}")  # Prints the error message in the console incase something goes wrong
 
-
-
+send_discord_notif("🚀 Starting LinkedIn Job Application Bot...")  # Sends a notification to Discord when the bot starts
  
 
 def skills_extract(file_path):  # Func to extract skills from a resume like python,java,django,c++ etc.
@@ -48,50 +50,27 @@ def skills_extract(file_path):  # Func to extract skills from a resume like pyth
         content = file.read().lower()  # Makes characters lowercase
 
     known_skills = ["python", "java", "django", "c++", "javascript", "react", "angular", "vue", "ruby", "rails", "swift", "kotlin", "php", "mysql", "mongodb", "sql", "aws", "azure", "google cloud"]  # List of skills
-    found_skills = [skill for skill in known_skills if skill in content]  # Finds the skills that are in the resume
+    found_skills = [skill for skill in known_skills if skill in "resume.txt"]  # Finds the skills that are in the resume
     return found_skills  # Now returns all the various skills found in the resume
 
-def job_url_gen(skills): # A func to give us job urls 
+def job_url_gen(found_skills): # A func to give us job urls 
     base = "https://www.linkedin.com/jobs/search/?keywords=" # Every linkedin job search starts with this 
     urls = [] # The generated urls will be stored here
-    for skill in skills:    # Creates a loop with each skill in the list skills
+    for skill in found_skills:    # Creates a loop with each skill in the list skills
         keyword = skill.replace(" ", "+") # Replaces the blank area with each keyword
         url = base + keyword # Adds the keywords to the base url
         urls.append(url) # Changes the urls list adding new job urls
 
-    return urls
+    return urls # Returns the urls list with all the job urls
 
 
-def checked_if_logged_in(driver): # Function to check if user is logged in or not 
-    
-    try:
-        
-        
-        WebDriverWait(driver, 10).until( # Waits for an element with ID "profile-nav-item" to be present on the page. times out in 10s
-            EC.presence_of_element_located((By.ID, "profile-nav-item"))
-        )
-
-        
-        print("Already logged in!") # Print message and send a Discord notification if logged in.
-        send_discord_notif("✅ Already logged into LinkedIn.")
-        return True  # Return True if logged in.
-
-    except Exception as e:
-        # Handle exceptions, print message, and send a Discord notification if not logged in.
-        print("Not logged in:", e)
-        send_discord_notif("❌ Not logged in to LinkedIn.")
-        return False  # Return False if not logged in.
-
-print("Calling login_to_linkedin") # To test if it calls login 
+ 
 def login_to_linkedin(driver, username, password):
     try:
-        if checked_if_logged_in(driver):  # Checks if the user is already logged in.
-            return  # If already logged in, exits the function.
-
         print("Driver:", driver)  # Prints the Selenium WebDriver instance.
         print("Current URL (before get):", driver.current_url)  # Prints the current URL before navigating to the login page.
 
-        driver.get("https://www.linkedin.com/login")  # Navigates the browser to the LinkedIn login page.
+        driver.get("https://www.linkedin.com/login") 
 
         print(driver.current_url) # Prints the current URL after navigating to the login page.
 
@@ -104,11 +83,11 @@ def login_to_linkedin(driver, username, password):
 
         email_element.clear()  # Clears any existing text in the email input field.
         email_element.send_keys(username)  # Enters the provided username into the email input field.
-        time.sleep(2)  # Pauses execution for 2 seconds.
+        time.sleep(random.uniform(5, 15))  # Pauses execution for a random time between 5 and 15 seconds
 
         password_element.clear()  # Clears any existing text in the password input field.
         password_element.send_keys(password)  # Enters the provided password into the password input field.
-        time.sleep(1)  # Pauses execution for 1 second.
+        time.sleep(random.uniform(5, 20))  # Pauses execution for a random time between 5 and 15 seconds
 
         password_element.send_keys(Keys.RETURN)  # Simulates pressing the Enter key to submit the login form.
 
@@ -119,8 +98,9 @@ def login_to_linkedin(driver, username, password):
         print("Login successful")  # Prints a success message to the console.
         send_discord_notif("✅ Logged into LinkedIn successfully.")  # Sends a Discord notification indicating successful login.
     except Exception as e:
-        print(f"Login failed: {e}")  # Prints an error message to the console if login fails.
         send_discord_notif(f"❌ Failed to log into LinkedIn: {e}")  # Sends a Discord notification indicating login failure.
+
+login_to_linkedin(driver, username, password)
 
 def job_apply_all(urls): # A function to apply to all job urls in the list urls
     send_discord_notif("Applying to all jobs...")
@@ -157,7 +137,7 @@ def fill_easy_form():
     try:
         phone_input = driver.find_element(By.CSS_SELECTOR, "input[aria-label='Phone number']") 
         if phone_input.get_attribute("value") == "":
-            phone_input.send_keys("1234567890")  # Replace with your number
+            phone_input.send_keys(number)  # Replace with your number
 
         resume_upload = driver.find_element(By.CSS_SELECTOR, "input[type='file']") # Finds the resume upload field and stores it in resume_upload
         resume_upload.send_keys("resume.txt") # Uploads the resume from the current directory to the easy apply form
