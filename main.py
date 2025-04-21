@@ -15,6 +15,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import openai 
 from selenium.webdriver.chrome.options import Options
 import config 
+import urllib.parse
+from urllib.parse import quote 
 
 username = config.username
 password = config.password
@@ -22,7 +24,7 @@ openai_api = config.openai_api
 WEBHOOK = config.WEBHOOK
 file_path = config.file_path
 number = config.number 
-
+global found_skills 
 
 chrome_options = Options() # Assigns the options package to chrome_options for giving us our own settings for chrome 
 chrome_options.add_experimental_option("detach", True) #Prevent chrome from closing after running ONLY FOR DEBUGGING 
@@ -46,12 +48,20 @@ send_discord_notif("🚀 Starting LinkedIn Job Application Bot...")  # Sends a n
  
 
 def skills_extract(file_path):  # Func to extract skills from a resume like python,java,django,c++ etc.
-    with open(file_path, 'r') as file: # Opens the resume file  
+    with open(file_path, 'r+') as file: # Opens the resume file  
         content = file.read().lower()  # Makes characters lowercase
 
     known_skills = ["python", "java", "django", "c++", "javascript", "react", "angular", "vue", "ruby", "rails", "swift", "kotlin", "php", "mysql", "mongodb", "sql", "aws", "azure", "google cloud"]  # List of skills
-    found_skills = [skill for skill in known_skills if skill in "resume.txt"]  # Finds the skills that are in the resume
+    global found_skills # Makes the found_skills variable a global variable 
+    found_skills = [skill for skill in known_skills if skill in content ]  # Finds the skills that are in the resume
+     
+    print("skills_extract2")
+    print("Skills_extract")
+    print(found_skills)
+    
     return found_skills  # Now returns all the various skills found in the resume
+
+skills_extract("resume.txt") # Calls the function to extract skills from the resume
 
 def job_url_gen(found_skills): # A func to give us job urls 
     base = "https://www.linkedin.com/jobs/search/?keywords=" # Every linkedin job search starts with this 
@@ -101,38 +111,39 @@ def login_to_linkedin(driver, username, password):
         send_discord_notif(f"❌ Failed to log into LinkedIn: {e}")  # Sends a Discord notification indicating login failure.
 
 login_to_linkedin(driver, username, password)
-
+easy_apply_filter = driver.find_element(By.ID, "searchFilter_applyWithLinkedin") # Finds the easy apply filter and stores it in easy_apply_filter
 def job_apply_all(urls): # A function to apply to all job urls in the list urls
     send_discord_notif("Applying to all jobs...")
     for url in urls:
         send_discord_notif(f"Applying to job {url}")
-        driver.get(url) # Opens each job url in the current tab
-        time.sleep(5) # Stops running the program for 5 seconds then resumes
         try:
-            easy_apply_button = WebDriverWait(driver, 10).until( # makes selenium wait for 10 seconds 
+            driver.get(url) # Opens each job url in the current tab
+            time.sleep(5) # Stops running the program for 5 seconds then resumes
+            driver.click(easy_apply_filter) # Clicks on the easy apply filter
+            time.sleep(5)
+            easy_apply_button = WebDriverWait(driver, 10).until( # makes selenium wait for 10 seconds
                 EC.element_to_be_clickable((By.CLASS_NAME, "jobs-apply-button")) # Waits for the apply button to be clickable
             )
             easy_apply_button.click() # Clicks the apply button
-            send_discord_notif("📝 Easy Apply form opened.") # Sends a notif through discord 
+            send_discord_notif("📝 Easy Apply form opened.") # Sends a notif through discord
 
             time.sleep(random.uniform(1.8, 6.4)) # Wait for the apply form to open
 
-            submit_button = WebDriverWait(driver, 10).until( # Makes selenium wait for 10 seconds 
+            submit_button = WebDriverWait(driver, 10).until( # Makes selenium wait for 10 seconds
                 EC.element_to_be_clickable((By.CLASS_NAME, "artdeco-button--primary")) #   waits for the submit button to be clickable
             )
             submit_button.click() # Clicks on the submit button
-            time.sleep(2) # Stops program for 2 seconds then resumes 
-            
+            time.sleep(2) # Stops program for 2 seconds then resumes
+
             send_discord_notif("Job applied successfully!") # Notifies the user that the job has been applied in discord
             print(f"Job applied successfully to {url}") # Notifies the user that the job has been applied in terminal
 
         except Exception as e:
             print(f"Error applying to job {url}: {e}") # Notifies the user if any error occurred while applying to a job giving the job url
             send_discord_notif(f"Error applying to job {url}: {e}")
-            
+
         time.sleep(5) # Stops running the program for 5 seconds then resumes
-        fill_easy_form() # Calls the function to fill the easy apply form
-      
+        fill_easy_form() # Calls the function to fill the easy apply form      
 def fill_easy_form():
     try:
         phone_input = driver.find_element(By.CSS_SELECTOR, "input[aria-label='Phone number']") 

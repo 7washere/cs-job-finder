@@ -9,6 +9,7 @@ Skills:
 - c++  
 - java  
 - python
+- sql
 ...  
 
 Projects:  
