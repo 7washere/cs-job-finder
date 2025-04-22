@@ -16,7 +16,7 @@ import openai
 from selenium.webdriver.chrome.options import Options
 import config 
 import urllib.parse
-from urllib.parse import quote 
+from urllib.parse import quote,  urlparse, urlencode, parse_qsl
 
 username = config.username
 password = config.password
@@ -63,15 +63,21 @@ def skills_extract(file_path):  # Func to extract skills from a resume like pyth
 
 skills_extract("resume.txt") # Calls the function to extract skills from the resume
 
-def job_url_gen(found_skills): # A func to give us job urls 
-    base = "https://www.linkedin.com/jobs/search/?keywords=" # Every linkedin job search starts with this 
-    urls = [] # The generated urls will be stored here
-    for skill in found_skills:    # Creates a loop with each skill in the list skills
-        keyword = skill.replace(" ", "+") # Replaces the blank area with each keyword
-        url = base + keyword # Adds the keywords to the base url
-        urls.append(url) # Changes the urls list adding new job urls
+def job_url_gen(found_skills):
+    base = "https://www.linkedin.com/jobs/search/?keywords="
+    urls = [] # List to store the generated URLs 
+    file = open("job_urls.txt", "w")  # Open in 'w' mode to overwrite or create the file correctly
 
-    return urls # Returns the urls list with all the job urls
+    for skill in found_skills:
+        keyword = skill.replace(" ", "%20")  # Replace spaces with %20 for URL encoding
+        url = base + keyword 
+        urls.append(url)
+        file.write(url + "\n")  # Write each URL to a new line in the file
+        print(f"Generated URL for: {skill}") # More informative print statement
+
+
+    file.close() # Close the file when done writing
+    return urls 
 
 
  
