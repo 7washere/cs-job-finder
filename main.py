@@ -18,6 +18,7 @@ import config
 import urllib.parse
 from urllib.parse import quote,  urlparse, urlencode, parse_qsl
 
+
 username = config.username
 password = config.password
 openai_api = config.openai_api
@@ -118,38 +119,109 @@ def login_to_linkedin(driver, username, password):
 
 login_to_linkedin(driver, username, password)
 easy_apply_filter = driver.find_element(By.ID, "searchFilter_applyWithLinkedin") # Finds the easy apply filter and stores it in easy_apply_filter
-def job_apply_all(urls): # A function to apply to all job urls in the list urls
-    send_discord_notif("Applying to all jobs...")
+
+def job_apply_all(urls, jobs_per_url=5):
     for url in urls:
-        send_discord_notif(f"Applying to job {url}")
         try:
-            driver.get(url) # Opens each job url in the current tab
-            time.sleep(5) # Stops running the program for 5 seconds then resumes
-            driver.click(easy_apply_filter) # Clicks on the easy apply filter
-            time.sleep(5)
-            easy_apply_button = WebDriverWait(driver, 10).until( # makes selenium wait for 10 seconds
-                EC.element_to_be_clickable((By.CLASS_NAME, "jobs-apply-button")) # Waits for the apply button to be clickable
+            driver.get(url)
+            print(f"Navigated to job search URL: {url}")
+            time.sleep(random.uniform(3, 7))
+
+            # Apply Easy Apply filter (find it on each page)
+            try:
+                easy_apply_filter_element = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.ID, "searchFilter_applyWithLinkedin-1"))
+                )
+                easy_apply_filter_element.click()
+                print("Applied 'Easy Apply' filter.")
+                time.sleep(random.uniform(2, 5))
+            except Exception as e:
+                print(f"Could not find or click 'Easy Apply' filter: {e}")
+
+            # Find all clickable job listings on the current page
+            job_cards = WebDriverWait(driver, 15).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".job-card-container--clickable"))
             )
-            easy_apply_button.click() # Clicks the apply button
-            send_discord_notif("📝 Easy Apply form opened.") # Sends a notif through discord
 
-            time.sleep(random.uniform(1.8, 6.4)) # Wait for the apply form to open
+            applied_count = 0
+            for i in range(min(jobs_per_url, len(job_cards))):
+                # Re-find elements on each iteration to avoid StaleElementReferenceException
+                job_cards = WebDriverWait(driver, 15).until(
+                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".job-card-container--clickable"))
+                )
+                if i >= len(job_cards):
+                    break
 
-            submit_button = WebDriverWait(driver, 10).until( # Makes selenium wait for 10 seconds
-                EC.element_to_be_clickable((By.CLASS_NAME, "artdeco-button--primary")) #   waits for the submit button to be clickable
-            )
-            submit_button.click() # Clicks on the submit button
-            time.sleep(2) # Stops program for 2 seconds then resumes
+                job_card = job_cards[i]
+                job_number = i + 1
+                print(f"Processing job listing number: {job_number}")
 
-            send_discord_notif("Job applied successfully!") # Notifies the user that the job has been applied in discord
-            print(f"Job applied successfully to {url}") # Notifies the user that the job has been applied in terminal
+                try:
+                    job_card.click()
+                    print(f"Clicked on job listing number: {job_number}")
+                    time.sleep(random.uniform(2, 5))
+
+                    try:
+                        easy_apply_button = WebDriverWait(driver, 10).until(
+                            EC.element_to_be_clickable((By.CLASS_NAME, "jobs-apply-button"))
+                        )
+                        easy_apply_button.click()
+                        # send_discord_notif(f"📝 Easy Apply form opened for job {job_number} at {url}. Please fill it out manually.")
+                        print(f"Easy Apply form opened for job {job_number}. Waiting for user input.")
+
+                        input(f"Press Enter after you have filled out and submitted the form for job {job_number}...")
+                        print("User indicated form submission.")
+                        applied_count += 1
+                        time.sleep(random.uniform(2, 5))
+
+                        # Try to close any confirmation modal
+                        try:
+                            close_button = WebDriverWait(driver, 5).until(
+                                EC.element_to_be_clickable((By.CLASS_NAME, "artdeco-modal__dismiss"))
+                            )
+                            close_button.click()
+                            print("Closed confirmation modal (if any).")
+                        except TimeoutException:
+                            pass
+                        except Exception as e:
+                            print(f"Error closing modal: {e}")
+
+                    except TimeoutException:
+                        print(f"Could not find Easy Apply button for job {job_number}.")
+                        try:
+                            close_button = WebDriverWait(driver, 5).until(
+                                EC.element_to_be_clickable((By.CLASS_NAME, "artdeco-modal__dismiss"))
+                            )
+                            close_button.click()
+                        except TimeoutException:
+                            pass
+                        except Exception as e:
+                            print(f"Error closing modal (no Easy Apply): {e}")
+
+                except Exception as e:
+                    print(f"Error processing job listing number {job_number}: {e}")
+
+                if applied_count >= jobs_per_url:
+                    print(f"Processed {jobs_per_url} job listings on this page.")
+                    break
 
         except Exception as e:
-            print(f"Error applying to job {url}: {e}") # Notifies the user if any error occurred while applying to a job giving the job url
-            send_discord_notif(f"Error applying to job {url}: {e}")
+            print(f"Error processing job search URL {url}: {e}")
+            time.sleep(random.uniform(5, 10))
 
-        time.sleep(5) # Stops running the program for 5 seconds then resumes
-        fill_easy_form() # Calls the function to fill the easy apply form      
+
+def job_apply_all():
+    for skill in found_skills: 
+        search_button = By.CSS_SELECTOR, "input.search-global-typeahead__input" # Finds the search button and stores it in search_button
+        driver.click(search_button)
+        time.sleep(random .uniform(9, 18.2)) # Pauses execution for a random time between 5 and 15 seconds
+        search_button.send_keys(skill)
+        driver.send_keys(Keys.RETURN) # Simulates pressing the Enter key to submit the search form.
+        driver.click(easy_apply_filter) # Clicks on the easy apply filter
+
+        return  
+
+
 def fill_easy_form():
     try:
         phone_input = driver.find_element(By.CSS_SELECTOR, "input[aria-label='Phone number']") 
@@ -185,36 +257,5 @@ def fill_easy_form():
 
     time.sleep(5) # Stops running the program for 5 seconds then resumes
 
-
-def resume_feedback(file_path):  # function to get resume feedback
-    with open(file_path, 'r') as file:  # Opens the resume file
-        resume_text = file.read()  # reads the resume file
-        prompt = f"Please review this resume and give improvement suggestions, formatting tips, and skill recommendations:\n\n{resume_text}"  # The prompt to be sent to ChatGPT
-
-        try:
-            response = openai.ChatCompletion.create(  # sends a request to ChatGPT to get resume feedback
-                model="gpt-3.5-turbo",  # The ChatGPT model we will be using
-                messages=[
-                    {"role": "system", "content": "You are an expert career advisor."}, # The chat between chatgpt and user. The model is given the role of being a career advisor and we send a prompt as message 
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7
-            )
-            feedback = response['choices'][0]['message']['content']  # Takes the response given by ChatGPT and picks the first choice
-
-            print("Resume Feedback:")  # Prints the resume feedback in terminal
-            print(feedback)
-
-            send_discord_notif(f"📄 Resume Feedback:\n{feedback[:1800]}")  # Sends the resume feedback to Discord
-
-            with open("review.txt", "w") as f: # Opens the review.txt file and inputs the resume feedback
-                f.write(feedback)
-
-            print("\n✅ Review written to review.txt") # Prints resume feedback in terminal 
-
-        except Exception as e: # Catches errors 
-            print("❌ Error getting feedback:", e) # Prints error in terminal 
-            send_discord_notif(f"❌ Failed to get resume feedback: {e}") # Sends error to Discord
-
-
 input()
+
