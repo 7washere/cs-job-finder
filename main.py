@@ -218,6 +218,7 @@ def job_apply_all():
         search_button.send_keys(skill)
         driver.send_keys(Keys.RETURN) # Simulates pressing the Enter key to submit the search form.
         driver.click(easy_apply_filter) # Clicks on the easy apply filter
+        
 
         return  
 
@@ -257,5 +258,5 @@ def fill_easy_form():
 
     time.sleep(5) # Stops running the program for 5 seconds then resumes
 
-input()
+input() 
 
