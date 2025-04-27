@@ -15,7 +15,12 @@ from selenium.webdriver.support import expected_conditions as EC
 import openai 
 from selenium.webdriver.chrome.options import Options
 import config 
-import main 
+import main
+
+username = config.username
+password = config.password
+driver = main.driver
+
 
 
 main.send_discord_notif("🚀 Starting LinkedIn Job Application Bot...")
@@ -25,7 +30,7 @@ main.skills_extract("resume.txt")
 main.send_discord_notif("Extracting Skills from Resume")
 print("Extracting Skills from Resume")
 
-main.job_url_gen(found_skills)
+main.job_url_gen()
 main.send_discord_notif("Generating Job URLs")
 print("Generating Job URLs")
 
@@ -33,8 +38,10 @@ main.login_to_linkedin(driver, username, password)
 main.send_discord_notif("Logging into LinkedIn")
 print("Logging into linkedin")
 
-main.resume_feedback("resume.txt")
-main.send_discord_notif("Getting resume feedback")
-print("Getting resume feedback")
+main.job_apply_all(jobs_per_skill=5)  
+main.send_discord_notif("Applying to jobs")
+print("Applying to jobs")
+
+
 
 input()

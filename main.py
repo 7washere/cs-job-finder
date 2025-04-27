@@ -27,6 +27,7 @@ file_path = config.file_path
 number = config.number 
 global found_skills 
 
+
 chrome_options = Options() # Assigns the options package to chrome_options for giving us our own settings for chrome 
 chrome_options.add_experimental_option("detach", True) #Prevent chrome from closing after running ONLY FOR DEBUGGING 
 
@@ -56,15 +57,14 @@ def skills_extract(file_path):  # Func to extract skills from a resume like pyth
     global found_skills # Makes the found_skills variable a global variable 
     found_skills = [skill for skill in known_skills if skill in content ]  # Finds the skills that are in the resume
      
-    print("skills_extract2")
-    print("Skills_extract")
+    
     print(found_skills)
     
     return found_skills  # Now returns all the various skills found in the resume
 
-skills_extract("resume.txt") # Calls the function to extract skills from the resume
 
-def job_url_gen(found_skills):
+
+def job_url_gen():
     base = "https://www.linkedin.com/jobs/search/?keywords="
     urls = [] # List to store the generated URLs 
     file = open("job_urls.txt", "w")  # Open in 'w' mode to overwrite or create the file correctly
@@ -112,151 +112,88 @@ def login_to_linkedin(driver, username, password):
             EC.presence_of_element_located((By.ID, "profile-nav-item"))  # Locates an element that appears after successful login.
         )
 
+        time.sleep(random.float(5.2, 15.2)) # Pauses execution for a random time between 5.2 and 15.2 seconds
+
         print("Login successful")  # Prints a success message to the console.
         send_discord_notif("✅ Logged into LinkedIn successfully.")  # Sends a Discord notification indicating successful login.
     except Exception as e:
         send_discord_notif(f"❌ Failed to log into LinkedIn: {e}")  # Sends a Discord notification indicating login failure.
 
-login_to_linkedin(driver, username, password)
-easy_apply_filter = driver.find_element(By.ID, "searchFilter_applyWithLinkedin") # Finds the easy apply filter and stores it in easy_apply_filter
 
-def job_apply_all(urls, jobs_per_url=5):
-    for url in urls:
-        try:
-            driver.get(url)
-            print(f"Navigated to job search URL: {url}")
+
+
+
+
+def job_apply_all(jobs_per_skill=5):
+    try:
+        for skill in found_skills:
+            print(f"🔍 Searching for {skill} jobs...")
+            driver.execute_script("window.open('');")
+            driver.switch_to.window(driver.window_handles[-1])
+            time.sleep(random.uniform(6.23, 9.4))
+            
+            driver.get("https://www.linkedin.com/jobs/")
+            time.sleep(random.uniform(3, 5))
+            
+            search_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "jobs-search-box-keyword-id-ember29"))
+            )
+            search_input.clear()
+            search_input.send_keys(skill)
+            search_input.send_keys(Keys.RETURN)
+            
             time.sleep(random.uniform(3, 7))
 
-            # Apply Easy Apply filter (find it on each page)
-            try:
-                easy_apply_filter_element = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.ID, "searchFilter_applyWithLinkedin-1"))
-                )
-                easy_apply_filter_element.click()
-                print("Applied 'Easy Apply' filter.")
-                time.sleep(random.uniform(2, 5))
-            except Exception as e:
-                print(f"Could not find or click 'Easy Apply' filter: {e}")
-
-            # Find all clickable job listings on the current page
-            job_cards = WebDriverWait(driver, 15).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".job-card-container--clickable"))
+            easy_apply_filter = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-tracking-control-name='public_jobs_f_LF']"))
             )
-
+            easy_apply_filter.click()
+            
+            time.sleep(random.uniform(2, 5))
+            
+            print(f"\n📝 Ready to apply for {skill} jobs.")
+            input("Press Enter after applying to move to the next job...")
+            
+            # Process job listings
             applied_count = 0
-            for i in range(min(jobs_per_url, len(job_cards))):
-                # Re-find elements on each iteration to avoid StaleElementReferenceException
-                job_cards = WebDriverWait(driver, 15).until(
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".job-card-container--clickable"))
-                )
-                if i >= len(job_cards):
-                    break
-
-                job_card = job_cards[i]
-                job_number = i + 1
-                print(f"Processing job listing number: {job_number}")
-
+            while applied_count < jobs_per_skill:
                 try:
-                    job_card.click()
-                    print(f"Clicked on job listing number: {job_number}")
-                    time.sleep(random.uniform(2, 5))
-
-                    try:
-                        easy_apply_button = WebDriverWait(driver, 10).until(
-                            EC.element_to_be_clickable((By.CLASS_NAME, "jobs-apply-button"))
-                        )
-                        easy_apply_button.click()
-                        # send_discord_notif(f"📝 Easy Apply form opened for job {job_number} at {url}. Please fill it out manually.")
-                        print(f"Easy Apply form opened for job {job_number}. Waiting for user input.")
-
-                        input(f"Press Enter after you have filled out and submitted the form for job {job_number}...")
-                        print("User indicated form submission.")
-                        applied_count += 1
-                        time.sleep(random.uniform(2, 5))
-
-                        # Try to close any confirmation modal
-                        try:
-                            close_button = WebDriverWait(driver, 5).until(
-                                EC.element_to_be_clickable((By.CLASS_NAME, "artdeco-modal__dismiss"))
-                            )
-                            close_button.click()
-                            print("Closed confirmation modal (if any).")
-                        except TimeoutException:
-                            pass
-                        except Exception as e:
-                            print(f"Error closing modal: {e}")
-
-                    except TimeoutException:
-                        print(f"Could not find Easy Apply button for job {job_number}.")
-                        try:
-                            close_button = WebDriverWait(driver, 5).until(
-                                EC.element_to_be_clickable((By.CLASS_NAME, "artdeco-modal__dismiss"))
-                            )
-                            close_button.click()
-                        except TimeoutException:
-                            pass
-                        except Exception as e:
-                            print(f"Error closing modal (no Easy Apply): {e}")
-
+                    job_cards = WebDriverWait(driver, 10).until(
+                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".job-card-container"))
+                    )
+                    
+                    if not job_cards:
+                        print(f"No more job listings found for {skill}")
+                        break
+                    
+                    job_cards[0].click()
+                    time.sleep(random.uniform(2, 4))
+                    
+                    print(f"\n📝 Please complete the application manually.")
+                    input("Press Enter when you've finished this application...")
+                    
+                    applied_count += 1
+                    print(f"✅ Moving to job {applied_count + 1} of {jobs_per_skill} for {skill}")
+                    
                 except Exception as e:
-                    print(f"Error processing job listing number {job_number}: {e}")
-
-                if applied_count >= jobs_per_url:
-                    print(f"Processed {jobs_per_url} job listings on this page.")
-                    break
-
-        except Exception as e:
-            print(f"Error processing job search URL {url}: {e}")
+                    print(f"Error processing job: {e}")
+                    input("Press Enter to try the next job or Ctrl+C to exit...")
+                    continue
+            
+            print(f"Completed applications for {skill}. Moving to next skill...")
             time.sleep(random.uniform(5, 10))
-
-
-def job_apply_all():
-    for skill in found_skills: 
-        search_button = By.CSS_SELECTOR, "input.search-global-typeahead__input" # Finds the search button and stores it in search_button
-        driver.click(search_button)
-        time.sleep(random .uniform(9, 18.2)) # Pauses execution for a random time between 5 and 15 seconds
-        search_button.send_keys(skill)
-        driver.send_keys(Keys.RETURN) # Simulates pressing the Enter key to submit the search form.
-        driver.click(easy_apply_filter) # Clicks on the easy apply filter
-        
-
-        return  
-
-
-def fill_easy_form():
-    try:
-        phone_input = driver.find_element(By.CSS_SELECTOR, "input[aria-label='Phone number']") 
-        if phone_input.get_attribute("value") == "":
-            phone_input.send_keys(number)  # Replace with your number
-
-        resume_upload = driver.find_element(By.CSS_SELECTOR, "input[type='file']") # Finds the resume upload field and stores it in resume_upload
-        resume_upload.send_keys("resume.txt") # Uploads the resume from the current directory to the easy apply form
-
-        while True:
-            try:
-                next_button = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Continue to next step']") # Finds the next button and stores it in next_button
-                if next_button.is_enabled(): # Checks if the next button is enabled
-                    next_button.click() # Clicks on the next button 
-                    prev_url = driver.current_url # Stores the current url 
-                    WebDriverWait(driver, 10).until(EC.url_changes(prev_url)) # Waits for the next page to load
-                else:
-                    break
-            except Exception as e:
-                print(f"Error filling form: {e}")
-                break
-
-        submit_buttons = driver.find_elements(By.CSS_SELECTOR, "button") # Finds all the buttons on the page
-        for button in submit_buttons: # Loops through all the buttons
-            if "submit" in button.text.lower(): # Checks if the button text contains "submit" 
-                button.click() # Clicks on the submit button
-                print("Final submit button clicked.") # Notifies the user that the final submit button has been clicked in terminal 
-                send_discord_notif("✅ Final form submitted.") # Notifies the user that the final submit button has been clicked in discord
-                break 
-
+            
     except Exception as e:
-        print(f"Skipped optional fields or form already filled: {e}") # Notifies the user if any optional fields or form were skipped or already filled
+        print(f"Major error in job_apply_all: {e}")
+        send_discord_notif(f"❌ Error in job application process: {e}")
 
-    time.sleep(5) # Stops running the program for 5 seconds then resumes
 
-input() 
 
+
+
+
+
+    
+
+
+input()

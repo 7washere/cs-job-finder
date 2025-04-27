@@ -1,0 +1,4 @@
+https://www.linkedin.com/jobs/search/?keywords=python
+https://www.linkedin.com/jobs/search/?keywords=java
+https://www.linkedin.com/jobs/search/?keywords=c++
+https://www.linkedin.com/jobs/search/?keywords=sql
