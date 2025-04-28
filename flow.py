@@ -15,11 +15,12 @@ from selenium.webdriver.support import expected_conditions as EC
 import openai 
 from selenium.webdriver.chrome.options import Options
 import config 
-import main
+import testing as main
 
 username = config.username
 password = config.password
 driver = main.driver
+
 
 
 
@@ -44,4 +45,4 @@ print("Applying to jobs")
 
 
 
-input()
+input("Press Enter to close the browser...")  # Wait for user input before closing the browser

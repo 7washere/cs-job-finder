@@ -26,6 +26,7 @@ WEBHOOK = config.WEBHOOK
 file_path = config.file_path
 number = config.number 
 global found_skills 
+print("🤖 Press Enter to start the bot 🤖")
 
 
 chrome_options = Options() # Assigns the options package to chrome_options for giving us our own settings for chrome 
@@ -143,16 +144,21 @@ def job_apply_all(jobs_per_skill=5):
             search_input.send_keys(Keys.RETURN)
             
             time.sleep(random.uniform(3, 7))
-
             easy_apply_filter = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-tracking-control-name='public_jobs_f_LF']"))
-            )
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, 
+                        "button#searchFilter_applyWithLinkedin.artdeco-pill.artdeco-pill--slate.artdeco-pill--2.artdeco-pill--choice"))
+                )
             easy_apply_filter.click()
+            print("🔍 Easy Apply filter applied.")
+            send_discord_notif(f"🔍 Easy Apply filter applied for {skill} jobs.")
+                
             
+
+
             time.sleep(random.uniform(2, 5))
             
             print(f"\n📝 Ready to apply for {skill} jobs.")
-            input("Press Enter after applying to move to the next job...")
+            input("Press Enter after finishing applying to move to the next job...")
             
             # Process job listings
             applied_count = 0
@@ -173,7 +179,12 @@ def job_apply_all(jobs_per_skill=5):
                     input("Press Enter when you've finished this application...")
                     
                     applied_count += 1
-                    print(f"✅ Moving to job {applied_count + 1} of {jobs_per_skill} for {skill}")
+                    if applied_count >= jobs_per_skill:
+                        print(f"✅ Completed applications for {skill}.")
+                        send_discord_notif(f"✅ Completed applications for {skill}.")
+                        break
+                    else: 
+                        print(f"✅ Moving to job {applied_count + 1} of {jobs_per_skill} for {skill}")
                     
                 except Exception as e:
                     print(f"Error processing job: {e}")
@@ -186,14 +197,3 @@ def job_apply_all(jobs_per_skill=5):
     except Exception as e:
         print(f"Major error in job_apply_all: {e}")
         send_discord_notif(f"❌ Error in job application process: {e}")
-
-
-
-
-
-
-
-    
-
-
-input()
