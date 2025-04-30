@@ -21,12 +21,10 @@ from urllib.parse import quote,  urlparse, urlencode, parse_qsl
 
 username = config.username
 password = config.password
-openai_api = config.openai_api
 WEBHOOK = config.WEBHOOK
 file_path = config.file_path
-number = config.number 
 global found_skills 
-print("🤖 Press Enter to start the bot 🤖")
+jobs_per_skill = config.jobs_per_skill
 
 
 chrome_options = Options() # Assigns the options package to chrome_options for giving us our own settings for chrome 
@@ -134,6 +132,9 @@ def job_apply_all(jobs_per_skill=5):
             time.sleep(random.uniform(6.23, 9.4))
             
             driver.get("https://www.linkedin.com/jobs/")
+            driver.maximize_window()
+
+
             time.sleep(random.uniform(3, 5))
             
             search_input = WebDriverWait(driver, 10).until(
@@ -151,14 +152,18 @@ def job_apply_all(jobs_per_skill=5):
             easy_apply_filter.click()
             print("🔍 Easy Apply filter applied.")
             send_discord_notif(f"🔍 Easy Apply filter applied for {skill} jobs.")
-                
+
+            easy_apply_button = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.XPATH, "//span[contains(@class, 'artdeco-button__text') and text()='Easy Apply']"))
+)
+            easy_apply_button.click()
             
 
 
             time.sleep(random.uniform(2, 5))
             
             print(f"\n📝 Ready to apply for {skill} jobs.")
-            input("Press Enter after finishing applying to move to the next job...")
+            
             
             # Process job listings
             applied_count = 0
